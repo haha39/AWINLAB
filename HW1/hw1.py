@@ -1,6 +1,6 @@
 import os
 
-from keras.preprocessing.image import ImageDataGenerator
+from keras.src.legacy.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input
 
@@ -68,16 +68,16 @@ class DogClassifier:
         )
 
         # 使用 fit_generator 方法训练模型
-        self.model.fit_generator(
+        self.model.fit(
             train_generator,
-            steps_per_epoch=train_generator.samples // batch_size,
+            steps_per_epoch=min(train_generator.samples //
+                                batch_size, 200),  # 设置最大步数为200
             epochs=epochs,
             validation_data=valid_generator,
             validation_steps=valid_generator.samples // batch_size
         )
 
     def evaluate(self, valid_dir, batch_size):
-        # 评估模型在验证集上的性能
         valid_datagen = ImageDataGenerator(rescale=1./255)
 
         valid_generator = valid_datagen.flow_from_directory(
@@ -87,8 +87,7 @@ class DogClassifier:
             class_mode='categorical'
         )
 
-        # 使用 evaluate_generator 方法评估模型
-        scores = self.model.evaluate_generator(
+        scores = self.model.evaluate(
             valid_generator, steps=valid_generator.samples // batch_size)
         print("Valid set Accuracy: %.2f%%" % (scores[1] * 100))
 
