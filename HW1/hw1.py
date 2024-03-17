@@ -1,25 +1,16 @@
-# # TensorFlow and tf.keras
-# import tensorflow as tf
-# from tensorflow import keras
-
-# # Helper libraries
-# import numpy as np
-# import matplotlib.pyplot as plt
-
 import os
 
-# print(tf.__version__)
-
+from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input
 
 
 class DogClassifier:
-    def __init__(self) -> None:
+    def __init__(self):
         self.model = self.build_model()
 
     def build_model(self):
-        # 创建一个序贯模型
+        # 创建一个卷积神经网络模型
         model = Sequential()
 
         # 添加一个独立的输入层
@@ -56,42 +47,61 @@ class DogClassifier:
         # model.summary()
         return model
 
-    def train(self, train_data, valid_data):
-        # 訓練模型的代碼
-        xx = 1
+    def train(self, train_dir, valid_dir, batch_size, epochs):
+        # 使用 ImageDataGenerator 对训练和验证数据进行预处理和增强
+        train_datagen = ImageDataGenerator(rescale=1./255)
+        valid_datagen = ImageDataGenerator(rescale=1./255)
 
-    def evaluate(self, test_data):
-        # 評估模型的代碼
-        x = 1
+        # 使用 flow_from_directory 方法生成训练和验证集的数据流
+        train_generator = train_datagen.flow_from_directory(
+            train_dir,
+            target_size=(224, 224),
+            batch_size=batch_size,
+            class_mode='categorical'
+        )
 
+        valid_generator = valid_datagen.flow_from_directory(
+            valid_dir,
+            target_size=(224, 224),
+            batch_size=batch_size,
+            class_mode='categorical'
+        )
 
-# 指定数据集文件夹路径
-# dataset_folder = "./archive"  # 将 "path_to_dataset_folder" 替换为实际的文件夹路径
+        # 使用 fit_generator 方法训练模型
+        self.model.fit_generator(
+            train_generator,
+            steps_per_epoch=train_generator.samples // batch_size,
+            epochs=epochs,
+            validation_data=valid_generator,
+            validation_steps=valid_generator.samples // batch_size
+        )
 
-# # 分别访问 train、valid 和 test 文件夹
-# train_folder = os.path.join(dataset_folder, "train")
-# valid_folder = os.path.join(dataset_folder, "valid")
-# test_folder = os.path.join(dataset_folder, "test")
+    def evaluate(self, valid_dir, batch_size):
+        # 评估模型在验证集上的性能
+        valid_datagen = ImageDataGenerator(rescale=1./255)
 
-# if os.path.exists(valid_folder):
-#     # 遍历验证集文件夹中的子文件夹（每个子文件夹代表一种狗的品种）
-#     for breed_folder in os.listdir(valid_folder):
-#         breed_path = os.path.join(valid_folder, breed_folder)
-#         print(f"訪問驗證集 {breed_folder} 文件夹，路徑為: {breed_path}")
+        valid_generator = valid_datagen.flow_from_directory(
+            valid_dir,
+            target_size=(224, 224),
+            batch_size=batch_size,
+            class_mode='categorical'
+        )
+
+        # 使用 evaluate_generator 方法评估模型
+        scores = self.model.evaluate_generator(
+            valid_generator, steps=valid_generator.samples // batch_size)
+        print("Valid set Accuracy: %.2f%%" % (scores[1] * 100))
 
 
 def main():
-    # 创建 DogClassifier 类的实例
     classifier = DogClassifier()
+    train_dir = 'archive/train'  # 训练集路径
+    valid_dir = 'archive/valid'  # 验证集路径
+    batch_size = 32
+    epochs = 10
 
-    # 训练模型
-    train_data = ...  # 加载训练数据
-    valid_data = ...  # 加载验证数据
-    classifier.train(train_data, valid_data)
-
-    # 评估模型
-    test_data = ...  # 加载测试数据
-    classifier.evaluate(test_data)
+    classifier.train(train_dir, valid_dir, batch_size, epochs)  # 训练模型
+    classifier.evaluate(valid_dir, batch_size)  # 评估模型
 
 
 if __name__ == "__main__":
