@@ -54,10 +54,10 @@ class DogClassifier:
         # model.summary()
         return model
 
-    def train(self, train_dir, valid_dir, batch_size, epochs):
+    def train(self, train_dir, batch_size, epochs):
         # 使用 ImageDataGenerator 对训练和验证数据进行预处理和增强
         train_datagen = ImageDataGenerator(rescale=1./255)
-        valid_datagen = ImageDataGenerator(rescale=1./255)
+        # valid_datagen = ImageDataGenerator(rescale=1./255)
 
         # 使用 flow_from_directory 方法生成训练和验证集的数据流
         train_generator = train_datagen.flow_from_directory(
@@ -67,12 +67,12 @@ class DogClassifier:
             class_mode='categorical'
         )
 
-        valid_generator = valid_datagen.flow_from_directory(
-            valid_dir,
-            target_size=(224, 224),
-            batch_size=batch_size,
-            class_mode='categorical'
-        )
+        # valid_generator = valid_datagen.flow_from_directory(
+        #     valid_dir,
+        #     target_size=(224, 224),
+        #     batch_size=batch_size,
+        #     class_mode='categorical'
+        # )
 
         # 使用 fit 方法训练模型
         self.model.fit(
@@ -80,23 +80,26 @@ class DogClassifier:
             steps_per_epoch=min(train_generator.samples //
                                 batch_size, 200),  # 设置最大步数为200
             epochs=epochs,
-            validation_data=valid_generator,
-            validation_steps=valid_generator.samples // batch_size
+            # validation_data=valid_generator,
+            # validation_steps=valid_generator.samples // batch_size
         )
 
     def evaluate(self, valid_dir, batch_size):
-        valid_datagen = ImageDataGenerator(rescale=1./255)
-
-        valid_generator = valid_datagen.flow_from_directory(
+        valid_data_generator = ImageDataGenerator(
+            preprocessing_function=preprocess_input)
+        valid_generator = valid_data_generator.flow_from_directory(
             valid_dir,
             target_size=(224, 224),
             batch_size=batch_size,
-            class_mode='categorical'
+            class_mode='categorical',
+            shuffle=False
         )
-
-        scores = self.model.evaluate(
-            valid_generator, steps=valid_generator.samples // batch_size)
-        print("Valid set Accuracy: %.2f%%" % (scores[1] * 100))
+        evaluation = self.model.evaluate(
+            valid_generator,
+            steps=valid_generator.samples // batch_size,
+            verbose=1
+        )
+        print("Validation Accuracy:", evaluation[1])
 
     def test(self, test_dir):
         # 测试模型的方法
@@ -145,7 +148,7 @@ def main():
     batch_size = 32
     epochs = 10
 
-    classifier.train(train_dir, valid_dir, batch_size, epochs)  # 训练模型
+    classifier.train(train_dir, batch_size, epochs)  # 训练模型
     classifier.evaluate(valid_dir, batch_size)  # 评估模型
     classifier.test(test_dir)  # 测试模型
 
