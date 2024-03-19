@@ -7,6 +7,7 @@ from keras.src.legacy.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class DogClassifier:
@@ -55,10 +56,10 @@ class DogClassifier:
         # model.summary()
         return model
 
-    def train(self, train_dir, batch_size, epochs):
+    def train(self, train_dir, valid_dir, batch_size, epochs):
         # 使用 ImageDataGenerator 对训练和验证数据进行预处理和增强
         train_datagen = ImageDataGenerator(rescale=1./255)
-        # valid_datagen = ImageDataGenerator(rescale=1./255)
+        valid_datagen = ImageDataGenerator(rescale=1./255)
 
         # 使用 flow_from_directory 方法生成训练和验证集的数据流
         train_generator = train_datagen.flow_from_directory(
@@ -68,67 +69,44 @@ class DogClassifier:
             class_mode='categorical'
         )
 
-        # valid_generator = valid_datagen.flow_from_directory(
-        #     valid_dir,
-        #     target_size=(224, 224),
-        #     batch_size=batch_size,
-        #     class_mode='categorical'
-        # )
+        valid_generator = valid_datagen.flow_from_directory(
+            valid_dir,
+            target_size=(224, 224),
+            batch_size=batch_size,
+            class_mode='categorical'
+        )
 
-        # 使用 fit 方法训练模型
         self.model.fit(
             train_generator,
             steps_per_epoch=min(train_generator.samples //
                                 batch_size, 200),  # 设置最大步数为200
             epochs=epochs,
-            # validation_data=valid_generator,
-            # validation_steps=valid_generator.samples // batch_size
+            validation_data=valid_generator,
+            validation_steps=valid_generator.samples // batch_size,
         )
 
     def evaluate(self, valid_dir, batch_size):
-        valid_data_generator = ImageDataGenerator(
-            preprocessing_function=preprocess_input)
+        valid_datagen = ImageDataGenerator(rescale=1./255)
 
-        valid_generator = valid_data_generator.flow_from_directory(
+        valid_generator = valid_datagen.flow_from_directory(
             valid_dir,
             target_size=(224, 224),
             batch_size=batch_size,
-            class_mode='categorical',
-            shuffle=False
+            class_mode='categorical'
         )
 
-        evaluation = self.model.evaluate(
-            valid_generator,
-            steps=valid_generator.samples // batch_size,
-            verbose=1
-        )
-        print("Validation Accuracy:", evaluation[1])
+        scores = self.model.evaluate(
+            valid_generator, steps=valid_generator.samples // batch_size)
+        validation_accuracy = scores[1] * 100
 
-        # 获取模型在验证集上的预测结果
-        predictions = self.model.predict(
-            valid_generator, steps=valid_generator.samples // batch_size, verbose=1)
+        print("Valid set Accuracy: %.2f%%" % validation_accuracy)
 
-        # 绘制准确率和损失值曲线
-        self.plot_metrics(self.model.history.history)
+        # 将验证准确率汇总到 DataFrame 中
+        df = pd.DataFrame({'Accuracy': [validation_accuracy]})
 
-    def plot_metrics(self, history):
-        # 绘制准确率曲线
-        plt.plot(history['accuracy'], label='Train Accuracy')
-        plt.plot(history['val_accuracy'], label='Validation Accuracy')
-        plt.xlabel('Epochs')
-        plt.ylabel('Accuracy')
-        plt.title('Training and Validation Accuracy')
-        plt.legend()
-        plt.show()
-
-        # 绘制损失值曲线
-        plt.plot(history['loss'], label='Train Loss')
-        plt.plot(history['val_loss'], label='Validation Loss')
-        plt.xlabel('Epochs')
-        plt.ylabel('Loss')
-        plt.title('Training and Validation Loss')
-        plt.legend()
-        plt.show()
+        # 将 DataFrame 写入 Excel 文件
+        df.to_excel('validation_accuracy.xlsx', index=False)
+        print("Validation accuracy saved to validation_accuracy.xlsx")
 
     def test(self, test_dir):
         # 测试模型的方法
@@ -177,9 +155,15 @@ def main():
     batch_size = 32
     epochs = 10
 
-    classifier.train(train_dir, batch_size, epochs)  # 训练模型
+    classifier.train(train_dir, valid_dir, batch_size, epochs)  # 训练模型
     classifier.evaluate(valid_dir, batch_size)  # 评估模型
-    classifier.test(test_dir)  # 测试模型
+    # classifier.test(test_dir)  # 测试模型
+
+    # # 假设 history 是模型的训练历史记录对象
+    # history = None  # 这里需要根据实际情况替换成模型训练的返回值
+
+    # # 绘制模型的准确率和损失值曲线
+    # classifier.plot_metrics(history)
 
 
 if __name__ == "__main__":
