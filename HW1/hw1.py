@@ -88,6 +88,7 @@ class DogClassifier:
     def evaluate(self, valid_dir, batch_size):
         valid_data_generator = ImageDataGenerator(
             preprocessing_function=preprocess_input)
+
         valid_generator = valid_data_generator.flow_from_directory(
             valid_dir,
             target_size=(224, 224),
@@ -95,12 +96,13 @@ class DogClassifier:
             class_mode='categorical',
             shuffle=False
         )
-        # evaluation = self.model.evaluate(
-        #     valid_generator,
-        #     steps=valid_generator.samples // batch_size,
-        #     verbose=1
-        # )
-        # print("Validation Accuracy:", evaluation[1])
+
+        evaluation = self.model.evaluate(
+            valid_generator,
+            steps=valid_generator.samples // batch_size,
+            verbose=1
+        )
+        print("Validation Accuracy:", evaluation[1])
 
         # 获取模型在验证集上的预测结果
         predictions = self.model.predict(
