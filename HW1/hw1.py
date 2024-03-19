@@ -6,6 +6,7 @@ from keras.applications.imagenet_utils import preprocess_input
 from keras.src.legacy.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input
+import matplotlib.pyplot as plt
 
 
 class DogClassifier:
@@ -94,12 +95,38 @@ class DogClassifier:
             class_mode='categorical',
             shuffle=False
         )
-        evaluation = self.model.evaluate(
-            valid_generator,
-            steps=valid_generator.samples // batch_size,
-            verbose=1
-        )
-        print("Validation Accuracy:", evaluation[1])
+        # evaluation = self.model.evaluate(
+        #     valid_generator,
+        #     steps=valid_generator.samples // batch_size,
+        #     verbose=1
+        # )
+        # print("Validation Accuracy:", evaluation[1])
+
+        # 获取模型在验证集上的预测结果
+        predictions = self.model.predict(
+            valid_generator, steps=valid_generator.samples // batch_size, verbose=1)
+
+        # 绘制准确率和损失值曲线
+        self.plot_metrics(self.model.history.history)
+
+    def plot_metrics(self, history):
+        # 绘制准确率曲线
+        plt.plot(history['accuracy'], label='Train Accuracy')
+        plt.plot(history['val_accuracy'], label='Validation Accuracy')
+        plt.xlabel('Epochs')
+        plt.ylabel('Accuracy')
+        plt.title('Training and Validation Accuracy')
+        plt.legend()
+        plt.show()
+
+        # 绘制损失值曲线
+        plt.plot(history['loss'], label='Train Loss')
+        plt.plot(history['val_loss'], label='Validation Loss')
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        plt.title('Training and Validation Loss')
+        plt.legend()
+        plt.show()
 
     def test(self, test_dir):
         # 测试模型的方法
@@ -128,7 +155,7 @@ class DogClassifier:
         # 将测试结果写入 Excel 文件
         df = pd.DataFrame(test_results, columns=[
                           'File Name', 'Predicted Breed'])
-        df.to_excel('test_data.xlsx', index=False)
+        df.to_excel('test_data.xlsx', index=False, header=False)  # 不写入标题行
         print("Test results saved to test_data.xlsx")
 
     def get_predicted_breed(self, predictions):
