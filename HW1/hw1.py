@@ -8,6 +8,7 @@ from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input
 import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image
 
 
 class DogClassifier:
@@ -108,6 +109,16 @@ class DogClassifier:
         df.to_excel('validation_accuracy.xlsx', index=False)
         print("Validation accuracy saved to validation_accuracy.xlsx")
 
+    def center_crop_image(self, img):
+        # 中心裁剪图像
+        width, height = img.size
+        new_width = new_height = min(width, height)
+        left = (width - new_width) // 2
+        top = (height - new_height) // 2
+        right = (width + new_width) // 2
+        bottom = (height + new_height) // 2
+        return img.crop((left, top, right, bottom))
+
     def test(self, test_dir):
         # 测试模型的方法
         # 获取测试集文件名列表
@@ -118,9 +129,11 @@ class DogClassifier:
         test_results = []
 
         for file_name in test_files:
-            # 加载图像并进行预处理
+            # 加载图像并进行中心裁剪和预处理
             img_path = os.path.join(test_dir, file_name)
-            img = load_img(img_path, target_size=(224, 224))
+            img = Image.open(img_path)
+            img = self.center_crop_image(img)  # 中心裁剪图像
+            img = img.resize((224, 224))  # 调整图像大小
             img_array = img_to_array(img)
             img_array = preprocess_input(img_array)
             img_array = img_array.reshape((1,) + img_array.shape)
@@ -157,13 +170,7 @@ def main():
 
     classifier.train(train_dir, valid_dir, batch_size, epochs)  # 训练模型
     classifier.evaluate(valid_dir, batch_size)  # 评估模型
-    # classifier.test(test_dir)  # 测试模型
-
-    # # 假设 history 是模型的训练历史记录对象
-    # history = None  # 这里需要根据实际情况替换成模型训练的返回值
-
-    # # 绘制模型的准确率和损失值曲线
-    # classifier.plot_metrics(history)
+    classifier.test(test_dir)  # 测试模型
 
 
 if __name__ == "__main__":
