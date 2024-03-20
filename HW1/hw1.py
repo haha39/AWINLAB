@@ -14,55 +14,57 @@ from PIL import Image
 class DogClassifier:
     def __init__(self):
         self.model = self.build_model()
-        # 添加 class_names 属性
+        # Add the class_names attribute
         self.class_names = ["Airedale", "Beagle", "Bloodhound", "Bluetick", "Chihuahua", "Collie", "Dingo",
                             "French Bulldog", "German Sheperd", "Malinois", "Newfoundland", "Pekinese",
                             "Pomeranian", "Pug", "Vizsla"]
 
     def build_model(self):
-        # 创建一个卷积神经网络模型
+        '''
+        Create a convolutional neural network model(CNN) :
+        With one separate input layer, three convolutional layers and a maximum pooling layer
+        '''
+
         model = Sequential()
 
-        # 添加一个独立的输入层
         model.add(Input(shape=(224, 224, 3)))
 
-        # 添加第一个卷积层和最大池化层
         model.add(Conv2D(32, (3, 3), activation='relu'))
         model.add(MaxPooling2D((2, 2)))
 
-        # 添加第二个卷积层和最大池化层
         model.add(Conv2D(64, (3, 3), activation='relu'))
         model.add(MaxPooling2D((2, 2)))
 
-        # 添加第三个卷积层和最大池化层
         model.add(Conv2D(128, (3, 3), activation='relu'))
         model.add(MaxPooling2D((2, 2)))
 
-        # 将三维特征图展平为一维向量
+        # Flattenning 3D feature maps into 1D vectors
         model.add(Flatten())
 
-        # 添加全连接层
+        # Add full connectivity layer
         model.add(Dense(512, activation='relu'))
 
-        # 添加 Dropout 层，防止过拟合
+        # Add Dropout layer to prevent overfitting
         model.add(Dropout(0.5))
 
-        # 输出层，输出分类结果
-        model.add(Dense(15, activation='softmax'))  # 假设有15个类别
+        # Output layer, outputs classification results(there are 15 dog breed categories)
+        model.add(Dense(15, activation='softmax'))
 
-        # 编译模型
+        # compiling the model
         model.compile(optimizer='adam', loss='categorical_crossentropy',
                       metrics=['accuracy'])
-        # 打印模型结构
+
+        # Printed Model Structures
         # model.summary()
         return model
 
     def train(self, train_dir, valid_dir, batch_size, epochs):
-        # 使用 ImageDataGenerator 对训练和验证数据进行预处理和增强
+
+        # Preprocessing and enhancement of training and validation data
         train_datagen = ImageDataGenerator(rescale=1./255)
         valid_datagen = ImageDataGenerator(rescale=1./255)
 
-        # 使用 flow_from_directory 方法生成训练和验证集的数据流
+        # Generating data streams for training and validation sets
         train_generator = train_datagen.flow_from_directory(
             train_dir,
             target_size=(224, 224),
@@ -77,18 +79,21 @@ class DogClassifier:
             class_mode='categorical'
         )
 
+        # Training the model
         self.model.fit(
             train_generator,
-            steps_per_epoch=min(train_generator.samples //
-                                batch_size, 200),  # 设置最大步数为200
+            steps_per_epoch=train_generator.samples // batch_size,
             epochs=epochs,
             validation_data=valid_generator,
             validation_steps=valid_generator.samples // batch_size,
         )
 
     def evaluate(self, valid_dir, batch_size):
+
+        # Preprocessing and enhancement of validation data
         valid_datagen = ImageDataGenerator(rescale=1./255)
 
+        # Generating data streams for validation sets
         valid_generator = valid_datagen.flow_from_directory(
             valid_dir,
             target_size=(224, 224),
@@ -96,28 +101,45 @@ class DogClassifier:
             class_mode='categorical'
         )
 
+        # Calculating accuracy
         scores = self.model.evaluate(
             valid_generator, steps=valid_generator.samples // batch_size)
         validation_accuracy = scores[1] * 100
 
         print("Valid set Accuracy: %.2f%%" % validation_accuracy)
 
-        # 将验证准确率汇总到 DataFrame 中
+        # Output validation accuracy into Excel(no need title)
         df = pd.DataFrame({'Accuracy': [validation_accuracy]})
-
-        # 将 DataFrame 写入 Excel 文件
         df.to_excel('validation_accuracy.xlsx', index=False)
+
         print("Validation accuracy saved to validation_accuracy.xlsx")
 
     def center_crop_image(self, img):
-        # 中心裁剪图像
+        '''
+        Pre-processing of images, with different sized images as input,
+          and centered cropped images as output.
+        '''
+
         width, height = img.size
         new_width = new_height = min(width, height)
         left = (width - new_width) // 2
         top = (height - new_height) // 2
         right = (width + new_width) // 2
         bottom = (height + new_height) // 2
+
         return img.crop((left, top, right, bottom))
+
+    def get_predicted_breed(self, predictions):
+        '''
+        To get the dog breed name based on the model predictions,
+        assume that predictions is the result of the model's prediction of the image,
+        determine the predicted breed based on the index of the highest probability in the probability vector
+        '''
+
+        breed_index = predictions.argmax()
+        breed_name = self.class_names[breed_index]
+
+        return breed_name
 
     def test(self, test_dir):
         # 测试模型的方法
@@ -150,14 +172,6 @@ class DogClassifier:
                           'File Name', 'Predicted Breed'])
         df.to_excel('test_data.xlsx', index=False, header=False)  # 不写入标题行
         print("Test results saved to test_data.xlsx")
-
-    def get_predicted_breed(self, predictions):
-        # 根据模型预测结果获取狗狗品种名称
-        # 这里假设 predictions 是模型对图像的预测结果，是一个概率向量
-        # 根据概率向量中最大概率的索引来确定预测的品种
-        breed_index = predictions.argmax()
-        breed_name = self.class_names[breed_index]
-        return breed_name
 
 
 def main():
