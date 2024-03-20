@@ -1,4 +1,5 @@
 import random
+import matplotlib.pyplot as plt
 
 
 class HillClimbing:
@@ -17,6 +18,34 @@ class HillClimbing:
         total_profit = sum(solution[i] * self.profits[i]
                            for i in range(len(self.profits)))
         return total_profit if total_weight <= self.capacity else 0
+
+    def hill_climbing(self):
+        current_solution = self.generate_random_solution()
+        current_fitness = self.calculate_fitness(current_solution)
+        convergence_values = [current_fitness]
+
+        for _ in range(self.iterations):
+            neighbor_solution = current_solution[:]
+            index_to_change = random.randint(0, len(neighbor_solution) - 1)
+            neighbor_solution[index_to_change] = 1 - \
+                neighbor_solution[index_to_change]
+
+            neighbor_fitness = self.calculate_fitness(neighbor_solution)
+            if neighbor_fitness > current_fitness:
+                current_solution = neighbor_solution
+                current_fitness = neighbor_fitness
+
+            convergence_values.append(current_fitness)
+
+        return convergence_values
+
+
+def plot_convergence(convergence_values):
+    plt.plot(range(len(convergence_values)), convergence_values)
+    plt.xlabel('Iterations')
+    plt.ylabel('Convergence Value')
+    plt.title('Convergence Plot')
+    plt.show()
 
 
 def main():
