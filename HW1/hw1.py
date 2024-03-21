@@ -110,7 +110,7 @@ class DogClassifier:
             valid_generator, steps=valid_generator.samples // batch_size)
         validation_accuracy = scores[1] * 100
 
-        print("Valid set Accuracy: %.2f%%" % validation_accuracy)
+        print("\nValid set Accuracy: %.2f%%\n" % validation_accuracy)
 
         # Output validation accuracy into Excel(no need title)
         df = pd.DataFrame({'Accuracy': [validation_accuracy]})
