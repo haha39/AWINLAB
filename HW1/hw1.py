@@ -177,7 +177,7 @@ class DogClassifier:
         df = pd.DataFrame(test_results, columns=[
                           'File Name', 'Predicted Breed'])
         df.to_excel('test_data.xlsx', index=False, header=False)
-        print("Test results saved to test_output.xlsx")
+        print("Test results saved to test_data.xlsx")
 
 
 def main():
