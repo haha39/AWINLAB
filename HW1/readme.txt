@@ -16,7 +16,7 @@ center_crop_image() : 回傳以中心為準，挑整過後的影像。
 
 get_predicted_breed() : 回傳預測的狗類品種。
 
-test() : 讀取實驗室提供的300張測試影像；因為每張影像的大小都不一樣，所以呼叫 center_crop_image() 以及 resize() 對影像作預先處理，處理方式為以影像中心為準裁切出224 * 224的大小；接著將處理過後的影像樣本傳遞給 get_predicted_breed() 預測狗類品種；最終輸出至Excel檔案。
+test() : 讀取實驗室提供的300張測試影像；因為每張影像的大小都不一樣，所以呼叫 center_crop_image() 以及 resize() 對影像作預先處理，處理方式為以影像中心為準裁切出224 * 224的大小；接著將處理過後的影像樣本傳遞給 get_predicted_breed() 預測狗類品種；最終輸出至test_output.xlsx檔案。
 
 
 心得感想:
