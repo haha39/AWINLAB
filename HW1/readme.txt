@@ -12,7 +12,7 @@ train() : 從訓練集以及驗證集抓取訓練樣本，提供給模型訓練�
 
 evaluate() : 訓練過後的模型，針對驗證集做測試，並將 Accuracy 輸出至 validation_accuracy.xlsx。
 
-center_crop_image() : 回傳以中心為準，挑整過後的影像。
+center_crop_image() : 回傳以中心為準，調整過後的影像。
 
 get_predicted_breed() : 回傳預測的狗類品種。
 
