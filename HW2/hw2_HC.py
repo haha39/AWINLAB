@@ -15,9 +15,8 @@ class HillClimbing:
         return [random.randint(0, 1) for _ in range(len(self.weights))]
 
     def calculate_fitness(self, solution):
-        '''
-        Return total profit if total_weight <= self.capacity
-        '''
+
+        # Return total profit if total_weight <= self.capacity
         total_weight = sum(solution[i] * self.weights[i]
                            for i in range(len(self.weights)))
         total_profit = sum(solution[i] * self.profits[i]
