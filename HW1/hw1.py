@@ -1,13 +1,17 @@
 import os
+
 import random
 import pandas as pd
-from keras.preprocessing.image import load_img, img_to_array
+
+from keras.preprocessing.image import img_to_array
 from keras.applications.imagenet_utils import preprocess_input
 from keras.src.legacy.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input
-import matplotlib.pyplot as plt
-import numpy as np
+
+# import matplotlib.pyplot as plt
+# import numpy as np
+
 from PIL import Image
 
 
@@ -142,49 +146,51 @@ class DogClassifier:
         return breed_name
 
     def test(self, test_dir):
-        # 测试模型的方法
-        # 获取测试集文件名列表
+
+        # Getting test set file address
         test_files = os.listdir(test_dir)
+        # To be fair, the order of access is randomized.
         random.shuffle(test_files)
 
-        # 初始化测试结果列表
         test_results = []
 
         for file_name in test_files:
-            # 加载图像并进行中心裁剪和预处理
+
+            # Load image with center crop and preprocessing
             img_path = os.path.join(test_dir, file_name)
             img = Image.open(img_path)
-            img = self.center_crop_image(img)  # 中心裁剪图像
-            img = img.resize((224, 224))  # 调整图像大小
+            # Center Cropped Image
+            img = self.center_crop_image(img)
+            # resize
+            img = img.resize((224, 224))
             img_array = img_to_array(img)
             img_array = preprocess_input(img_array)
             img_array = img_array.reshape((1,) + img_array.shape)
 
-            # 对图像进行预测
+            # Making predictions about the image
             predictions = self.model.predict(img_array)
             predicted_breed = self.get_predicted_breed(predictions)
 
-            # 将测试结果添加到列表中
             test_results.append((file_name, predicted_breed))
 
-        # 将测试结果写入 Excel 文件
+        # Output results into Excel(no need title)
         df = pd.DataFrame(test_results, columns=[
                           'File Name', 'Predicted Breed'])
-        df.to_excel('test_data.xlsx', index=False, header=False)  # 不写入标题行
+        df.to_excel('test_data.xlsx', index=False, header=False)
         print("Test results saved to test_data.xlsx")
 
 
 def main():
     classifier = DogClassifier()
-    train_dir = 'archive/train'  # 训练集路径
-    valid_dir = 'archive/valid'  # 验证集路径
-    test_dir = 'archive/testing_set'  # 测试集路径
+    train_dir = 'archive/train'
+    valid_dir = 'archive/valid'
+    test_dir = 'archive/testing_set'
     batch_size = 32
     epochs = 10
 
-    classifier.train(train_dir, valid_dir, batch_size, epochs)  # 训练模型
-    classifier.evaluate(valid_dir, batch_size)  # 评估模型
-    classifier.test(test_dir)  # 测试模型
+    classifier.train(train_dir, valid_dir, batch_size, epochs)
+    classifier.evaluate(valid_dir, batch_size)
+    classifier.test(test_dir)
 
 
 if __name__ == "__main__":
