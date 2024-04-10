@@ -9,9 +9,6 @@ from keras.src.legacy.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input
 
-# import matplotlib.pyplot as plt
-# import numpy as np
-
 from PIL import Image
 
 
@@ -65,7 +62,9 @@ class DogClassifier:
     def train(self, train_dir, valid_dir, batch_size, epochs):
 
         # Preprocessing and enhancement of training and validation data
-        train_datagen = ImageDataGenerator(rescale=1./255)
+        # train_datagen = ImageDataGenerator(rescale=1./255)
+        train_datagen = ImageDataGenerator(
+            rescale=1./255, shear_range=0.2, zoom_range=0.2, horizontal_flip=True)
         valid_datagen = ImageDataGenerator(rescale=1./255)
 
         # Generating data streams for training and validation sets
@@ -87,6 +86,7 @@ class DogClassifier:
         self.model.fit(
             train_generator,
             steps_per_epoch=min(train_generator.samples // batch_size, 200),
+            # steps_per_epoch=train_generator.samples // batch_size,
             epochs=epochs,
             validation_data=valid_generator,
             validation_steps=valid_generator.samples // batch_size,
@@ -190,7 +190,7 @@ def main():
 
     classifier.train(train_dir, valid_dir, batch_size, epochs)
     classifier.evaluate(valid_dir, batch_size)
-    classifier.test(test_dir)
+    # classifier.test(test_dir)
 
 
 if __name__ == "__main__":
