@@ -86,7 +86,7 @@ class DogClassifier:
         # Training the model
         self.model.fit(
             train_generator,
-            steps_per_epoch=train_generator.samples // batch_size,
+            steps_per_epoch=min(train_generator.samples // batch_size, 200),
             epochs=epochs,
             validation_data=valid_generator,
             validation_steps=valid_generator.samples // batch_size,
