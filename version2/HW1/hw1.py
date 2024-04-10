@@ -85,12 +85,19 @@ class DogClassifier:
         # Training the model
         self.model.fit(
             train_generator,
-            steps_per_epoch=min(train_generator.samples // batch_size, 200),
+            steps_per_epoch=min(train_generator.samples // batch_size, 150),
             # steps_per_epoch=train_generator.samples // batch_size,
             epochs=epochs,
             validation_data=valid_generator,
             validation_steps=valid_generator.samples // batch_size,
         )
+
+        # Calculating accuracy
+        scores = self.model.evaluate(
+            valid_generator, steps=valid_generator.samples // batch_size)
+        validation_accuracy = scores[1] * 100
+
+        print("\nValid set Accuracy: %.2f%%\n" % validation_accuracy)
 
     def evaluate(self, valid_dir, batch_size):
 
@@ -189,7 +196,7 @@ def main():
     epochs = 10
 
     classifier.train(train_dir, valid_dir, batch_size, epochs)
-    classifier.evaluate(valid_dir, batch_size)
+    # classifier.evaluate(valid_dir, batch_size)
     # classifier.test(test_dir)
 
 
